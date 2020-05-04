@@ -19,8 +19,8 @@ int getMoveRow(int rowNum, int colNum, char board[][COLS]);
 int gameWon(int rowNum, int colNum, char board[][COLS]);
 int checkColForWin(char board[][COLS], int rowStart, int colStart);
 void displayBoard(int rowNum, int colNum, char board[][COLS]);
-int readScores(int arrScores[], int colNum, char board[][COLS]);
-void writeScores(int numScores, int arrScores[], char arrNames[][MAX_ARR_SIZE]);
+int readScores(FILE* filePtr);
+char writeScores(char winner[][], int arrScores[][], char arrNames[][], FILE* filePtr);
 void saveScores(int newScore);
 int checkDiagonalRight(int rowStart, int colStart, char board[][COLS], char toFind);
 int checkDiagonalLeft(int rowStart, int colStart, char board[][COLS], char toFind);
@@ -46,6 +46,15 @@ int main()
                     break;
 
             case 2:
+	    	filePtr = fopen(SCORE, "r");
+			if(filePtr = NULL)
+			{
+				printf("No scores saved, try playing a game!\n");
+			}
+			else
+			{
+				readScores(filePtr);
+			}
             	    break;
         }
     }
@@ -424,4 +433,44 @@ int checkVertical(int rowStart, int colStart, char board[][COLS], char toFind)
 	while(piece == toFind);
 
 	return 0;
+}
+
+void readScores(FILE* filePtr)
+//for case 2 when user request to show score
+{
+	char name[20];
+	int wins, index = 0;
+
+	printf("**HIGH SCORES**\n);
+	
+	while(!feof(fp))
+	{
+		fscanf(fp, "%s %d", &name[index], &wins)
+
+		printf("%s", name[index]);
+		printf("%d\n", wins);
+		index++;
+	}
+}
+
+char writeScores(char winner[], int arrScores[][], char arrNames[][], FILE* filePtr)
+//Not fully functional yet since I need to find a way to get the winner 
+//should file and puts names and scores into an array
+{
+	int index = 0;
+
+	while(!feof(filePtr))
+	{
+		fscanf(filePtr, "%s %d", &arrNames[index], &arrScores[index]);
+		index++;
+	}
+	return arrNames, arrScores;
+}
+
+void saveScores(char winner[], int scores, FILE* filePtr)
+{
+	fprintf(filePtr, "%s", winner[]);
+	//would write the winners name
+	fprintf(filePtr, "%d\n", scores);
+	//adds the score next to name
 }
