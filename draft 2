@@ -1,0 +1,465 @@
+//Lab 8: Connect 4
+//Oliver Fliegler (adelef)
+//April 30, 2020
+
+#include <stdio.h>
+
+#define MAX_ARR_SIZE 100
+#define ROWS 6
+#define COLS 7
+
+
+int getMenuChoice();
+void getNames(char name1[], char name2[]); //removed col num, unsure of purpose
+void preSetBoard(char board[][COLS]);
+int checkFull(int rowStart, int colStart, char board[][COLS]);
+int playGame(char board[][COLS], char player1[], char player2[]);
+int getMoveCol(int rowNum, int colNum, char board[][COLS]);
+int getMoveRow(int rowNum, int colNum, char board[][COLS]);
+int gameWon(int rowNum, int colNum, char board[][COLS]);
+int checkColForWin(char board[][COLS], int rowStart, int colStart);
+void displayBoard(int rowNum, int colNum, char board[][COLS]);
+int readScores(int arrScores[], int colNum, char board[][COLS]);
+void writeScores(int numScores, int arrScores[], char arrNames[][MAX_ARR_SIZE]);
+void saveScores(int newScore);
+
+int checkDiagonalRight(int rowStart, int colStart, char board[][COLS], char toFind);
+int checkDiagonalLeft(int rowStart, int colStart, char board[][COLS], char toFind);
+int checkHorizontal(int rowStart, int colStart, char board[][COLS], char toFind);
+int checkVertical(int rowStart, int colStart, char board[][COLS], char toFind);
+
+
+int main()
+{
+	int menuChoice, numScores, score1, score2;
+	char player1[MAX_ARR_SIZE], player2[MAX_ARR_SIZE], gameBoard[ROWS][COLS];
+
+
+	do
+    {
+        menuChoice = getMenuChoice();
+
+        switch(menuChoice)
+        {
+            case 1:
+                    getNames(player1, player2);
+                    playGame(gameBoard, player1, player2);
+
+                    break;
+
+            case 2:
+            		break;
+        }
+    }
+    while (menuChoice != 0);
+
+	return 0;
+}
+
+
+int getMenuChoice()
+{
+    int userInput;
+
+    printf("***CONNECT 4***\n");
+    printf("1. Play Game\n");
+    printf("2. Show Scores\n");
+    printf("0. EXIT\n");
+
+    printf("Enter your choice: ");
+    scanf("%d", &userInput);
+
+    return userInput;
+}
+
+
+void getNames(char name1[], char name2[])
+{
+	printf("Player 1, enter your name: ");
+    scanf("%s", name1);
+
+    printf("Player 2, enter your name: ");
+    scanf("%s", name2);
+
+    printf("*********************\n");
+    printf("%s, you'll be X's\n%s, you'll be O's\n", name1, name2);
+    printf("---------------------\n");
+}
+
+
+void preSetBoard(char board[][COLS]) //puts blank spaces in every element of array
+{
+	for(int i = 0; i < ROWS; i++)
+	{
+		for(int j = 0; j < COLS; j++)
+		{
+			board[i][j] = ' ';
+		}
+	}
+}
+
+
+void displayBoard(int rowNum, int colNum, char board[][COLS]) //maybe checkFull??
+{
+	printf("[1][2][3][4][5][6][7]\n");
+	printf("---------------------\n");
+
+	for(int i = 0; i < ROWS; i++)
+	{
+		for(int j = 0; j < COLS; j++)
+		{
+			printf("[%c]", board[i][j]);
+		}
+		printf("\n");
+	}
+
+	printf("---------------------\n");
+	printf("[1][2][3][4][5][6][7]\n\n");
+
+}
+
+
+int playGame(char board[][COLS], char player1[], char player2[])
+{
+	int player = 1;
+	int win = 0, full = 0;
+	int playAgain;
+
+	preSetBoard(board);
+	displayBoard(ROWS, COLS, board); 
+
+	do
+	{
+		if(player == 1) 
+		{
+			printf("%s - Enter your move: ", player1);
+
+			int userCol = getMoveCol(ROWS, COLS, board); 
+			//gets user input for where they want to place piece (i.e. their move)
+			int userRow = getMoveRow(ROWS, userCol, board); 
+			//finds first empty column starting from bottom and decrementing upward
+
+			//printf("userCol: %d\nuserRow: %d\n", userCol, userRow);
+
+
+			while (userRow > ROWS || userRow < 0)
+			{
+				printf("Please enter a valid move: ");
+        		userCol = getMoveCol(userRow, userCol, board);
+        		userRow = getMoveRow(ROWS, userCol, board);
+			}
+
+			board[userRow][userCol] = 'X'; 
+
+			player = 2;
+		}
+		else if(player == 2) //same code with 'O' instead of 'X'
+		{
+			printf("%s - Enter your move: ", player2);
+
+			int userCol = getMoveCol(ROWS, COLS, board);
+			int userRow = getMoveRow(ROWS, userCol, board);
+
+			//printf("userCol: %d\nuserRow: %d\n", userCol, userRow);
+
+			while (userRow > ROWS || userRow < 0)
+			{
+				printf("Please enter a valid move: ");
+        		userCol = getMoveCol(userRow, userCol, board);
+        		userRow = getMoveRow(ROWS, userCol, board);
+			}
+			//printf("userCol2: %d\nuserRow2: %d\n", userCol, userRow);
+
+			board[userRow][userCol] = 'O';
+
+			player = 1;
+		}
+
+		displayBoard(ROWS, COLS, board); 
+		//displays board with new piece
+
+		win = gameWon(ROWS, COLS, board); 
+		full = checkFull(ROWS, COLS, board);
+
+		//printf("Check Full: %d\n", full);
+
+		//printf("Win: %d\nFull: %d\n", win, full);
+		//checks to see if a player has 4 in a row yet
+	}
+	while(win == 0 && full == 0);
+	//loop executes while neither player has won
+
+	if(win == 1)
+	{
+		if(player == 1)
+		{
+			printf("%s YOU WON!!! CONGRATS :D\n", player2);
+		}
+		if(player == 2)
+		{
+			printf("%s YOU WON!!! CONGRATS :D\n", player1);
+		}
+	}
+
+	if(full == 1)
+	{
+		displayBoard(ROWS, COLS, board);
+		printf("It's a tie! Try again...\n");
+	} 
+
+	printf("Play again? 1 - yes: ");
+	scanf("%d", &playAgain);
+
+	if(playAgain == 1)
+	{
+		playGame(board, player1, player2);
+	}
+	else{}
+}	
+
+
+int getMoveCol(int rowNum, int colNum, char board[][COLS])
+{
+	scanf("%d", &colNum);
+
+	while (colNum > COLS || colNum < 0) 
+	//checks if move is within valid range
+    {
+        printf("Please enter a valid move: ");
+        scanf("%d", &colNum);
+    }
+	//printf("Valid Move: %d\n", colNum);
+
+    return colNum - 1;
+    //subtract 1 to account for array indexing (which begins at 0, not 1)
+}
+
+
+int getMoveRow(int rowNum, int colNum, char board[][COLS])
+{
+
+	do
+	{
+		rowNum--;
+	}
+	while(board[rowNum][colNum] == 'X' || board[rowNum][colNum] == 'O');
+	//if element contains a character, decrement up and check until blank space
+
+	//printf("First empty row: %d\n", rowNum);
+
+	return rowNum;
+}
+
+
+int gameWon(int rowNum, int colNum, char board[][COLS])
+{
+	int win = 0;
+
+	for(int i = 0; i < ROWS; i++)
+	{
+		for(int j = 0; j < COLS; j++)
+		{
+			if(board[i][j] == 'X' || board[i][j] == 'O')
+			{
+				win = checkColForWin(board, i, j);
+				//checks every game piece in array to see if there are 4 in a row
+					if(win == 1)
+					{
+						return win;
+					}
+			}
+		}
+	}
+
+	return win;
+}
+
+
+int checkFull(int rowStart, int colStart, char board[][COLS])
+{
+	rowStart = 0;
+	colStart = 0;
+
+	char piece = board[rowStart][colStart];
+	int counter = 0;
+
+	//printf("Piece at 0,0: %c\n", board[rowStart][colStart]);
+
+	while(piece == 'X' || piece == 'O')
+	{
+		//moves right 1
+		colStart++;
+
+		piece = board[rowStart][colStart];
+		//printf("Piece Consecutive: %c\n", board[rowStart][colStart]);
+
+		counter++;
+	}
+
+	//printf("Full Counter: %d\n", counter);
+
+
+	if(counter > COLS)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+
+int checkColForWin(char board[][COLS], int rowStart, int colStart)
+{
+	char piece = board[rowStart][colStart];
+	int win;
+
+	if(piece == 'X') //checks every possible direction for 4 in a row
+	{
+			win = checkDiagonalRight(rowStart, colStart, board, piece);
+
+			if(win != 1) //if last function returns 0, user has not won. so, check next possibility
+			{
+				win = checkDiagonalLeft(rowStart, colStart, board, piece);
+			}
+			if(win != 1)
+			{
+				win = checkHorizontal(rowStart, colStart, board, piece);
+			}
+			if(win != 1)
+			{
+				win = checkVertical(rowStart, colStart, board, piece);
+			}
+	}
+
+	if(piece == 'O') //same process but with 'O'
+	{
+			win = checkDiagonalRight(rowStart, colStart, board, piece);
+
+			if(win != 1)
+			{
+				win = checkDiagonalLeft(rowStart, colStart, board, piece);
+			}
+			if(win != 1)
+			{
+				win = checkHorizontal(rowStart, colStart, board, piece);
+			}
+			if(win != 1)
+			{
+				win = checkVertical(rowStart, colStart, board, piece);
+			}	
+	}
+
+	return win; //either returns 0 (false) or 1 (true)
+}
+
+
+int checkDiagonalRight(int rowStart, int colStart, char board[][COLS], char toFind)
+{
+	int counter = 0;
+	int piece = board[rowStart][colStart];
+
+	do
+	{
+		//printf("Row: %d\nColumn: %d\n", rowStart+1, colStart+1);
+		//printf("First Piece: %c\n", piece);
+
+		rowStart--; colStart++; 
+		//moves right 1 element and up 1 element
+
+		piece = board[rowStart][colStart];
+		//reassign variable to position where next char would be
+		counter++;
+		//printf("Diagonal Right Counter: %d\n", counter);
+		//printf("Following Piece: %c\n", piece);
+
+		if(counter == 4) //if there are 4 in a row, return 1 (true)
+		{
+			return 1;
+		}
+	}
+	while(piece == toFind && colStart < COLS);
+	//loop executes while new piece also contains 'X' or 'O'
+
+	return 0;
+}
+
+
+int checkDiagonalLeft(int rowStart, int colStart, char board[][COLS], char toFind)
+{
+	int counter = 0;
+	int piece = board[rowStart][colStart];
+
+	do
+	{
+		//printf("Row: %d\nColumn: %d\n", rowStart+1, colStart+1);
+
+		rowStart--; colStart--;
+		//moves left 1 and up 1
+
+		piece = board[rowStart][colStart];
+		counter++;
+
+		//printf("Diagonal Left Counter: %d\n", counter);
+
+		if(counter == 4)
+		{
+			return 1;
+		}
+	}
+	while(piece == toFind && colStart > 0);
+
+	return 0;
+}
+
+
+int checkHorizontal(int rowStart, int colStart, char board[][COLS], char toFind)
+{
+	int counter = 0;
+	int piece = board[rowStart][colStart];
+
+	do
+	{
+		colStart++;
+		//moves right 1
+
+		piece = board[rowStart][colStart];
+		counter++;
+
+		//printf("Horizontal Counter: %d\n", counter);
+
+		if(counter == 4)
+		{
+			return 1;
+		}
+	}
+	while(piece == toFind && colStart < COLS);
+
+	return 0;
+}
+
+
+int checkVertical(int rowStart, int colStart, char board[][COLS], char toFind)
+{
+	int counter = 0;
+	int piece = board[rowStart][colStart];
+
+	do
+	{
+		rowStart--;
+		//moves up 1
+
+		piece = board[rowStart][colStart];
+
+		counter++;
+
+		//printf("Vertical Counter: %d\n", counter);
+
+		if(counter == 4 && rowStart > 0)
+		{
+			return 1;
+		}
+	}
+	while(piece == toFind);
+
+	return 0;
+}
